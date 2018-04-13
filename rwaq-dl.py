@@ -36,6 +36,12 @@ def print_error(msg):
     print(Fore.WHITE + Back.RED + Style.BRIGHT + '[rwaq-dl::ERROR]' + Style.RESET_ALL + ' ' + msg)
     exit(1)
 
+# Alarm printing function
+
+def print_alarm(msg):
+    print(Fore.WHITE + Back.RED + Style.BRIGHT + '[rwaq-dl::ERROR]' + Style.RESET_ALL + ' ' + msg)
+
+
 # Warning printing function
 
 def print_warning(msg):
@@ -170,12 +176,12 @@ def get_item_contents(session,item_url,item_type,item_folder):
                 f.write(response.content)
             #pass
         else:
-            print_warning('Unrecognized item type')
+            print_alarm('Unrecognized item type')
 
     except requests.exceptions.RequestException as e:
-        print_warning('Invalid item url (' + str(e) + ')')
+        print_alarm('Invalid item url (' + str(e) + ')')
     except Exception as e:
-        print_warning('Cannot download item (' + str(e) + ')')
+        print_alarm('Cannot download item (' + str(e) + ')')
 
 
 # file download function
@@ -191,7 +197,10 @@ def download_file(session,url,folder,file_name):
             chunk_size = 1024
             content_unit = 'KB'
         file_path = os.path.join(folder, file_name)
-        file_size = int(os.path.getsize(file_path))
+        if os.path.isfile(file_path):
+            file_size = int(os.path.getsize(file_path))
+        else:
+            file_size = 0
         #print(os.path.getsize(file_path))
         #print(os.path.isfile(file_path))
         #file_name = res.headers.get('content-disposition').replace('attachment;filename="', '').replace('"', '')
@@ -207,9 +216,9 @@ def download_file(session,url,folder,file_name):
         else:
             print_info(file_name + ' already exists.')
     except requests.exceptions.RequestException as e:
-        print_warning('Cannot Download File: (' + str(e) + ')')
+        print_alarm('Cannot Download File: (' + str(e) + ')')
     except Exception as e:
-        print_warning('Cannot Download File: (' + str(e) + ')')
+        print_alarm('Cannot Download File: (' + str(e) + ')')
 
 
 
@@ -223,6 +232,7 @@ if __name__ == '__main__':
         response = session.get(course)
         soup = bs(response.text,'lxml')
         course_dir = course_folder( get_title(soup), download_folder)
+        print_warning('Downloading ' + get_title(soup))
         section_count = 0
         for section in get_sections(soup):
             section_count += 1
@@ -245,6 +255,7 @@ if __name__ == '__main__':
                 get_item_contents(session,item_url,item_type,item_folder)
                 print_info('Finished ' + item_title)
             print_info('Finished ' + section_title)
+        print_info('\n\n' + get_title(soup) + ' Finished Download successfully')
 
 
     except requests.exceptions.RequestException as e:
