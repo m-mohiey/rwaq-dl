@@ -184,15 +184,28 @@ def download_file(session,url,folder,file_name):
     try:
         res = session.get(url, stream=True)
         chunk_size = 1024*1024
+        content_unit = 'MB'
+        content_size = int(res.headers.get('content-length', 0))
+        #print(content_size)
+        if content_size < int(chunk_size):
+            chunk_size = 1024
+            content_unit = 'KB'
+        file_path = os.path.join(folder, file_name)
+        file_size = int(os.path.getsize(file_path))
+        #print(os.path.getsize(file_path))
+        #print(os.path.isfile(file_path))
         #file_name = res.headers.get('content-disposition').replace('attachment;filename="', '').replace('"', '')
-        print_warning('Now Downloading ' + file_name + ' in ' + folder)
-        with open(os.path.join(folder, file_name), 'wb') as f:
-            for chunck in tqdm(res.iter_content(chunk_size),
-                               total=int(res.headers.get('content-length', 0)) / chunk_size, unit='MB', unit_scale=True,
-                               desc='Now Downloading ' + file_name):
-                if chunck:
-                    f.write(chunck)
-        print_info(file_name + ' Finished downloading successfully.')
+        if not (file_size == content_size and os.path.isfile(file_path)):
+            print_warning('Now Downloading ' + file_name + ' in ' + folder)
+            with open(file_path, 'wb') as f:
+                for chunck in tqdm(res.iter_content(chunk_size),
+                                   total=content_size / chunk_size, unit=content_unit, unit_scale=True,
+                                   desc='Now Downloading ' + file_name):
+                    if chunck:
+                        f.write(chunck)
+            print_info(file_name + ' Finished downloading successfully.')
+        else:
+            print_info(file_name + ' already exists.')
     except requests.exceptions.RequestException as e:
         print_warning('Cannot Download File: (' + str(e) + ')')
     except Exception as e:
