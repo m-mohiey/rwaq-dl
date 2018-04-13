@@ -6,6 +6,7 @@ import urllib.parse as parse
 from pytube import YouTube
 from tqdm import tqdm
 import argparse
+import string
 from colorama import *
 
 # Initiation for colorama module to use colors in console
@@ -70,6 +71,16 @@ def login(user,password,login_url='https://www.rwaq.org/users/sign_in'):
     except requests.exceptions.RequestException as e:
         print_error( 'Login Failed (' + str(e) + ')')
 
+# Make safe file name function to avoid invalid file and folder naming
+
+def makeSafeFilename(inputFilename):
+    # Set here the valid chars
+    unsafechars = r'?:<>/\\'  #safechars = string.ascii_letters + string.digits + "~ -_."
+    try:
+        return ''.join(c for c in inputFilename if c not in unsafechars) #filter(lambda c: c in safechars, inputFilename)
+    except:
+        return ""
+    pass
 
 # Validate course url function to make sure it is the right page
 
@@ -231,14 +242,14 @@ if __name__ == '__main__':
     try:
         response = session.get(course)
         soup = bs(response.text,'lxml')
-        course_dir = course_folder( get_title(soup), download_folder)
+        course_dir = course_folder( makeSafeFilename(get_title(soup)), download_folder)
         print_warning('Downloading ' + get_title(soup))
         section_count = 0
         for section in get_sections(soup):
             section_count += 1
             section_title = section.select_one('div.section-title ').text.strip()
             print_warning('Now working on ' + section_title)
-            section_folder = os.path.join(course_dir,'{number:02}- '.format(number=section_count) + section_title)
+            section_folder = os.path.join(course_dir,'{number:02}- '.format(number=section_count) + makeSafeFilename(section_title))
             if not os.path.exists(section_folder):
                 os.mkdir(section_folder)
             item_count = 0
@@ -247,7 +258,7 @@ if __name__ == '__main__':
                 item_title = item.select_one('span.row-title').text.strip()
                 item_url = parse.urljoin(course,item.select_one('a')['href'])
                 item_type = item.select_one('span.row-icon i.site-icons')['class'][0]
-                item_folder = os.path.join(section_folder,'{number:02}- '.format(number=item_count) + item_title)
+                item_folder = os.path.join(section_folder,'{number:02}- '.format(number=item_count) + makeSafeFilename(item_title))
                 print_warning('Now working on ' + item_title)
                 #print_warning(item_type)
                 if not os.path.exists(item_folder):
