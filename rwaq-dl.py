@@ -271,6 +271,8 @@ if __name__ == '__main__':
 
     except requests.exceptions.RequestException as e:
         print_error('Cannot access course link (' + str(e) + ')')
+    except KeyboardInterrupt as e:
+        print_error('User Interrupted the script (' + str(e) + ')')
     except Exception as e:
         print_error('Error (' + str(e) + ')')
 
