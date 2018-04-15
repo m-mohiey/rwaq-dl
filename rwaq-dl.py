@@ -6,7 +6,7 @@ import urllib.parse as parse
 from pytube import YouTube
 from tqdm import tqdm
 import argparse
-import string
+# import string
 from colorama import *
 
 # Initiation for colorama module to use colors in console
